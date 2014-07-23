@@ -1,0 +1,31 @@
+{
+  "name": "level-foreignkeys",
+  "version": "0.0.1",
+  "description": "Adds foreign key indexes to level.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fritzy/level-foreignkeys"
+  },
+  "keywords": [
+    "level",
+    "foreign",
+    "key",
+    "keys",
+    "db",
+    "database"
+  ],
+  "author": "Nathan Fritz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fritzy/level-foreignkeys/issues"
+  },
+  "homepage": "https://github.com/fritzy/level-foreignkeys",
+  "devDependencies": {
+    "jshint": "^2.5.2",
+    "precommit-hook": "^1.0.5"
+  }
+}
