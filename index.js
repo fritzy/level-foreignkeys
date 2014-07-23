@@ -74,5 +74,7 @@ function LevelForeignKeys(_db, fkopts) {
         });
     };
 
+    return db;
 }
 
+module.exports = LevelForeignKeys;
