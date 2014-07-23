@@ -99,14 +99,28 @@ function LevelForeignKeys(_db, fkopts) {
                 }));
                 reverseStream.once('end', function () {
                     //okay, now you can delete the actual key
-                    db.parent.del(key, opts, function (err) {
+                    db.parent.del(key, opts, function (err, extra) {
                         lock.release();
-                        cb(err)
+                        cb(err, extra);
                     });
                 });
             });
         });
     };
+
+    db.put = function (key, value, opts, cb) {
+        if (typeof opts === 'function') {
+            cb = opts;
+            opts = {};
+        }
+        lock.runwithlock(function () {
+            db.parent.put(key, value, opts, function (err, extra) {
+                lock.release();
+                cb(err, extra);
+            });
+        });
+    };
+
     return db;
 }
 
