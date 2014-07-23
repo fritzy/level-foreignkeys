@@ -7,7 +7,7 @@ function LevelForeignKeys(_db, fkopts) {
     fkopts = fkopts || {};
     fkopts.sep = fkopts.sep || '!';
     var lock = new Padlock();
-    
+
     function DB() {};
     DB.prototype = _db;
     var db = new DB();
@@ -63,17 +63,50 @@ function LevelForeignKeys(_db, fkopts) {
             opts = {};
         }
         var readOpts = underscore.clone(opts);
-        readOpts.values = false;
-        lstreams.createPrefixReadStream(db, ['__foreign__', key].join(fkopts.sep), readOpts)
-            .pipe(new lstreams.DeleteEvery(db, opts));
         lock.runwithlock(function () {
-            db.parent(key, opts, function (err) {
-                lock.release();
-                cb(err)
+            //delete all foreign key indexes
+            var foreignStream = lstreams.createPrefixReadStream(db, ['__foreign__', key].join(fkopts.sep), readOpts);
+            foreignStream.pipe(new lstreams.OnEach(function(entry, next) {
+                var parts = entry.key.split(fkopts.sep);
+                var delOpts = underscore.clone(opts);
+                if (typeof entry.extra === 'object') {
+                    //clone in the extra opts, like vclock?
+                    delOpts = delOpts.merge(entry.extra);
+                }
+                //delete reverse indexes for foreign keys
+                db.parent.del(entry.key, delOpts, function (err) {
+                    db.parent.del(['__rev_foreign__', parts[3], parts[2], parts[1]].join(fkopts.sep), delOpts, function (err) {
+                        next();
+                    });
+                });
+            }));
+            //delete reverse indexes
+            foreignStream.once('end', function () {
+                var reverseStream = lstreams.createPrefixReadStream(db, ['__rev_foreign__', key].join(fkopts.sep), readOpts);
+                reverseStream.pipe(new lstreams.OnEach(function(entry, next) {
+                    var parts = entry.key.split(fkopts.sep);
+                    var delOpts = underscore.clone(opts);
+                    if (typeof entry.extra === 'object') {
+                        //clone the extra opts in, like vclock?
+                        delOpts = delOpts.merge(entry.extra);
+                    }
+                    //delete foreign key indexes for reverse indexes
+                    db.parent.del(entry.key, delOpts, function (err) {
+                        db.parent.del(['__foreign__', parts[3], parts[2], parts[1]].join(fkopts.sep), delOpts, function (err) {
+                            next();
+                        });
+                    });
+                }));
+                reverseStream.once('end', function () {
+                    //okay, now you can delete the actual key
+                    db.parent.del(key, opts, function (err) {
+                        lock.release();
+                        cb(err)
+                    });
+                });
             });
         });
     };
-
     return db;
 }
 
