@@ -81,8 +81,8 @@ function LevelForeignKeys(_db, fkopts) {
             opts = {};
         }
         lock.runwithlock(function () {
-            if (opts.primaryBucket) {
-                opts.bucket = opts.primaryBucket;
+            if (opts.secondaryBucket) {
+                opts.bucket = opts.secondaryBucket;
             }
             db.parent.del(['__foreign__', key, field, fkey].join(fkopts.sep), opts, function (err) {
                 if (err) {
@@ -105,13 +105,16 @@ function LevelForeignKeys(_db, fkopts) {
         });
     };
 
-    db.hasForeignKey = function (key, field, fkey, opts, db) {
+    db.hasForeignKey = function (key, field, fkey, opts, cb) {
         if (typeof opts === 'function') {
             cb = opts;
             opts = {};
         }
         lock.runwithlock(function () {
-            db.parent.get(['__foreign__', key, field, fkey].join(fkopts.sep), opts, function (err) {
+            if (opts.secondaryBucket) {
+                opts.bucket = opts.secondaryBucket;
+            }
+            db.parent.get(['__foreign__', key, field, fkey].join(fkopts.sep), opts, function (err, val) {
                 lock.release();
                 if (err) {
                     cb(null, false);
