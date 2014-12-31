@@ -1,6 +1,6 @@
 {
   "name": "level-foreignkeys",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Adds foreign key indexes to level.",
   "main": "index.js",
   "scripts": {
