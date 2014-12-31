@@ -105,6 +105,23 @@ function LevelForeignKeys(_db, fkopts) {
         });
     };
 
+    db.hasForeignKey = function (key, field, fkey, opts, db) {
+        if (typeof opts === 'function') {
+            cb = opts;
+            opts = {};
+        }
+        lock.runwithlock(function () {
+            db.parent.get(['__foreign__', key, field, fkey].join(fkopts.sep), opts, function (err) {
+                lock.release();
+                if (err) {
+                    cb(null, false);
+                } else {
+                    cb(null, true);
+                }
+            });
+        });
+    };
+
     db.readForeignKeys = function (key, field, opts, rev_lookup) {
         opts = opts || {};
         var prefix = '__foreign__';
