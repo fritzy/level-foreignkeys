@@ -111,8 +111,8 @@ function LevelForeignKeys(_db, fkopts) {
             opts = {};
         }
         lock.runwithlock(function () {
-            if (opts.secondaryBucket) {
-                opts.bucket = opts.secondaryBucket;
+            if (opts.primaryBucket) {
+                opts.bucket = opts.primaryBucket;
             }
             db.parent.get(['__foreign__', key, field, fkey].join(fkopts.sep), opts, function (err, val) {
                 lock.release();
